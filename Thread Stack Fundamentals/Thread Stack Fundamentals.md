@@ -30,6 +30,7 @@ Copyright © 2015 Thread Group, Inc. All rights reserved.
 - [引言](#引言)
 - [设备类型](#设备类型)
 - [IP 栈基本原理](#ip-栈基本原理)
+- [网络拓扑](#网络拓扑)
 
 # 引言
 
@@ -51,7 +52,7 @@ Figure 1 展示了 Thread 栈的概览。
 
 **IEEE 802.15.4**
 
-本标准基于 IEEE 802.15.4 \[IEEE802154\] PHY（Physical）和 MAC（Media Access Control）层，在 2.4 GHz 频段下以 250kbps 速率工作。Thread 栈使用 IEEE 802.15.4-2006 版本的规范。
+本标准基于 IEEE 802.15.4 [\[IEEE802154\]](https://standards.ieee.org/standard/802_15_4-2006.html) PHY（Physical）和 MAC（Media Access Control）层，在 2.4 GHz 频段下以 250kbps 速率工作。Thread 栈使用 IEEE 802.15.4-2006 版本的规范。
 
 802.15.4 MAC 层用于基本的消息处理和拥塞控制。该 MAC 层包括一个为设备监听空闲信道的 CSMA（Carrier Sense Multiple Access）机制，以及一个用于处理相邻设备之间的可靠通信的重试和消息确认的链路层。MAC 层的加密和完整性保护被用于消息上，其基于软件栈较高层的密钥建立和配置。网络层建立在这些底层机制上来提供网络中可靠的端到端通信。
 
@@ -91,13 +92,13 @@ REED 具有成为路由器的能力，但由于网络拓扑或条件，这些设
 
 **寻址**
 
-Thread 栈中的设备支持 \[RFC 4291\] 中指定的 IPv6 寻址架构。设备配置一个或多个 ULA（Unique Local Address）或 GUA（Global Unicast Address）地址。
+Thread 栈中的设备支持 [\[RFC 4291\]](https://www.ietf.org/rfc/rfc4291) 中指定的 IPv6 寻址架构。设备配置一个或多个 ULA（Unique Local Address）或 GUA（Global Unicast Address）地址。
 
-启动网络的设备选择一个 /64 前缀，然后在整个 Thread 网络中使用。前缀是本地分配的 Global ID，通常称为 ULA 前缀 \[RFC 4193\]，并且可以称为 mesh 本地 ULA 前缀。Thread 网络还可以具有一个或多个边界路由器，每个边界路由器可以有或没有前缀，以用于生成额外的 GUA。Thread 网络中的设备使用其扩展的 MAC 地址来派生出其接口标识符（如 \[RFC 4944\] 第 6 部分中所定义的），并从中使用已知的本地前缀 FE80 :: 0/64 配置一个链路本地 IPv6 地址，如 \[RFC 4862\] 和 \[RFC 4944\] 所述。
+启动网络的设备选择一个 /64 前缀，然后在整个 Thread 网络中使用。前缀是本地分配的 Global ID，通常称为 ULA 前缀 [\[RFC 4193\]](https://www.ietf.org/rfc/rfc4193)，并且可以称为 mesh 本地 ULA 前缀。Thread 网络还可以具有一个或多个边界路由器，每个边界路由器可以有或没有前缀，以用于生成额外的 GUA。Thread 网络中的设备使用其扩展的 MAC 地址来派生出其接口标识符（如 [\[RFC 4944\]](https://www.ietf.org/rfc/rfc4944) 第 6 部分中所定义的），并从中使用已知的本地前缀 FE80 :: 0/64 配置一个链路本地 IPv6 地址，如 [\[RFC 4862\]](https://www.ietf.org/rfc/rfc4862) 和 [\[RFC 4944\]](https://www.ietf.org/rfc/rfc4944) 所述。
 
 这些设备还支持适当的多播地址。这包括链路本地全节点多播，链路本地全路由多播和领域本地多播。
 
-如 \[IEEE802154\] 中所述，每个加入 Thread 网络的设备都会被分配一个 16-bit 短地址。对于路由器，使用地址字段中的高位分配此地址且低位设置为 0，以表示路由器地址。然后，使用父系的高位和适当的低位为其子系分配一个 16-bit 短地址。这允许 Thread 网络中的任何其他设备简单地通过使用其地址字段的高位来推断其子系的路由位置。
+如 [\[IEEE802154\]](https://standards.ieee.org/standard/802_15_4-2006.html) 中所述，每个加入 Thread 网络的设备都会被分配一个 16-bit 短地址。对于路由器，使用地址字段中的高位分配此地址且低位设置为 0，以表示路由器地址。然后，使用父系的高位和适当的低位为其子系分配一个 16-bit 短地址。这允许 Thread 网络中的任何其他设备简单地通过使用其地址字段的高位来推断其子系的路由位置。
 
 Figure 2 展示了 Thread 的短地址。
 
@@ -105,21 +106,37 @@ Figure 2 展示了 Thread 的短地址。
 
 **6LoWPAN**
 
-所有设备均使用 \[RFC 4944\] 和 \[RFC 6282\] 中定义的 6LoWPAN。
+所有设备均使用 [\[RFC 4944\]](https://www.ietf.org/rfc/rfc4944) 和 [\[RFC 6282\]](https://www.ietf.org/rfc/rfc6282) 中定义的 6LoWPAN。
 
 在 Thread 网络内使用报头压缩，并且设备传输消息中尽可能地压缩 IPv6 报头，以最小化传输包的大小。
 
-支持 mesh 报头，以便更有效地压缩 mesh 内的消息，并支持链路层转发，如 [路由和网络连通]() 部分所述。mesh 报头还允许消息的端到端分片，而不是 \[RFC 4944\] 中指定的逐跳分片。Thread 栈使用 route-over 配置。
+支持 mesh 报头，以便更有效地压缩 mesh 内的消息，并支持链路层转发，如 [路由和网络连通]() 部分所述。mesh 报头还允许消息的端到端分片，而不是 [\[RFC 4944\]](https://www.ietf.org/rfc/rfc4944) 中指定的逐跳分片。Thread 栈使用 route-over 配置。
 
-设备不支持 \[RFC 6775\] 中指定的邻居发现，因为 DHCPv6 用于为路由器分配地址。终端设备和 REED 由其父路由器分配短地址。然后，该短地址用于配置 mesh 本地 ULA ，其被用于网络内部通信。
+设备不支持 [\[RFC 6775\]](https://www.ietf.org/rfc/rfc6775) 中指定的邻居发现，因为 DHCPv6 用于为路由器分配地址。终端设备和 REED 由其父路由器分配短地址。然后，该短地址用于配置 mesh 本地 ULA ，其被用于网络内部通信。
 
 有关 6LoWPAN 使用和配置的更多详细信息，请参见 “**Thread Usage of 6LoWPAN**” 白皮书。Thread 规范的第 3 章详细介绍了使用的特定 6LoWPAN 配置。
 
 **ICMP**
 
-设备支持 ICMPv6（Internet Control Message Protocol version 6）协议 \[RFC 4443\] 和 ICMPv6 错误消息，以及 echo 请求和 echo 答复消息。
+设备支持 ICMPv6（Internet Control Message Protocol version 6）协议 [\[RFC 4443\]](https://www.ietf.org/rfc/rfc4443) 和 ICMPv6 错误消息，以及 echo 请求和 echo 答复消息。
 
 **UDP**
 
-Thread 栈支持 \[RFC 768\] 中定义的 UDP（User Datagram Protocol），以用于设备间的消息传送。
+Thread 栈支持 [\[RFC 768\]](https://www.ietf.org/rfc/rfc768) 中定义的 UDP（User Datagram Protocol），以用于设备间的消息传送。
+
+# 网络拓扑
+
+**网络地址和设备**
+
+Thread 栈支持 Thread 网络中所有路由器之间的 full mesh 连通。
+
+实际的拓扑基于 Thread 网络中的路由器数量。如果只有一个路由器或边界路由器，则形成具有单个路由器的基本星型拓扑。如果有多个路由器，则会自动形成 mesh 拓扑。Figure 3 展示了 Thread 网络的基本拓扑和设备类型。
+
+![Figure 3. Basic Thread Network Topology and Devices](./pic/f3.jpg)
+
+**Mesh 网络**
+
+Mesh 网络允许无线电转发其他无线电的消息，从而使无线电系统更加可靠。例如，如果一个节点不能直接向另一节点发送消息，则 mesh 网络通过一个或多个中间节点转发消息。如 [路由和网络连通]() 部分所述，Thread 网络的本质是所有路由器节点都维护彼此间的路由和连通，因此，mesh 网络将不断地被维护和连接。典型地，Thread 网络中的活跃路由器限制为 32 个。然而，有 64 个路由器地址被使用，以容许路由器地址的回收。
+
+在 mesh 网络中，嗜睡终端设备或 REED 不会为其它设备路由。这些设备将消息发送到父系（作为路由器）。该父系路由器为其子系处理路由操作。
 
