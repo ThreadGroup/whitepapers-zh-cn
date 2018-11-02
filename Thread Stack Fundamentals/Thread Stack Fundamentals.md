@@ -31,6 +31,7 @@ Copyright © 2015 Thread Group, Inc. All rights reserved.
 - [设备类型](#设备类型)
 - [IP 栈基本原理](#ip-栈基本原理)
 - [网络拓扑](#网络拓扑)
+- [路由和网络连通](#路由和网络连通)
 
 # 引言
 
@@ -39,6 +40,7 @@ Copyright © 2015 Thread Group, Inc. All rights reserved.
 Thread 栈是一个可靠、经济、低功耗、无线 D2D（device-to-device）通信的开放标准。它是专为哪些需要基于 IP 网络和在栈上使用各种应用层的连接家庭应用程序设计的。
 
 这些是 Thread 栈和网络的一般特征：
+
 * 简单的网络安装，启动和操作：用于形成、加入和维护 Thread 网络的简单协议允许系统在发生路由问题时进行自配置和修复。
 * 安全：除非获得授权，并且所有通信都是加密和安全的，否则设备不会加入 Thread 网络。
 * 小型和大型网络：家庭网络从几个到几百个设备不等，可以进行无缝通信。网络层旨在基于预期的使用情况来优化网络操作。
@@ -139,4 +141,71 @@ Thread 栈支持 Thread 网络中所有路由器之间的 full mesh 连通。
 Mesh 网络允许无线电转发其他无线电的消息，从而使无线电系统更加可靠。例如，如果一个节点不能直接向另一节点发送消息，则 mesh 网络通过一个或多个中间节点转发消息。如 [路由和网络连通]() 部分所述，Thread 网络的本质是所有路由器节点都维护彼此间的路由和连通，因此，mesh 网络将不断地被维护和连接。典型地，Thread 网络中的活跃路由器限制为 32 个。然而，有 64 个路由器地址被使用，以容许路由器地址的回收。
 
 在 mesh 网络中，嗜睡终端设备或 REED 不会为其它设备路由。这些设备将消息发送到父系（作为路由器）。该父系路由器为其子系处理路由操作。
+
+# 路由和网络连通
+
+Thread 网络通常最多有 32 个活跃路由器，其基于设备路由表为消息使用下一跳路由。设备路由表由栈维护，以确保 Thread 网络中的所有路由器都具有任何其他路由器的连通和最新路径。其使用 RIP（Routing Information Protocol）算法（该算法来自 [\[RFC 1058\]](https://www.ietf.org/rfc/rfc1058) 和 [\[RFC 2080\]](https://www.ietf.org/rfc/rfc2080)，但不使用其特定的消息格式）。在 Thread 网络中，所有路由器使用 MLE（Mesh Link Establishment）以压缩格式与其他路由器交换其路由成本。
+
+Note：从 IP 的角度来看，Thread 网络支持路由器和主机。主机要么是嗜睡终端设备，要么是 REED。
+
+**MLE 消息**
+
+MLE 消息（参见 [\[draft-kelsey-intarea-mesh-link-establishment-06\]](https://datatracker.ietf.org/doc/draft-kelsey-intarea-mesh-link-establishment/)，在 Thread 规范的第 4 章消息链路建立中对 Thread 进行了扩展）用于建立和配置安全的无线电链路，检测相邻设备 ，并维护 Thread 网络中设备间的路由成本。MLE 消息通过单跳链路本地单播和路由器间多播来传输。
+
+在拓扑和物理环境发生变化时，MLE 消息用于标识，配置和保护到相邻设备的链路。MLE 还用于分发跨 Thread 网络共享的配置值，如信道和 PAN（Personal Area Network）ID。这些消息可以使用 MPL（Multicast Protocol for Low power and Lossy Networks）指定的简单洪泛（simple flooding）进行转发。（有关详细信息，请参阅 [\[draft-ietf-roll-trickle-mcast-09\]](https://tools.ietf.org/html/draft-ietf-roll-trickle-mcast-09)）
+
+MLE 消息还确保在两个设备间建立路由成本时，非对称链路成本被考虑。非对称链路成本在 802.15.4 网络中很常见。为确保双向消息传递的可靠性，考虑双向链路的成本非常重要。
+
+**路由发现和修复**
+
+按需路由发现通常用于低功耗 802.15.4 网络。然而，按需路由发现在网络开销和带宽方面是昂贵的，因为路由发现请求会泛洪网络。
+
+在 Thread 网络中，所有路由器定期将包含链路成本信息的单跳 MLE 广告包交换到所有邻居路由器，并且将路径成本交换到 Thread 网络中的所有其他路由器。通过这些定期的本地更新，Thread 网络中的所有路由器都有到任何其他路由器的最新路径成本信息，因此不需要按需路由发现。如果路由不再可用，路由器可以选择下一个最合适的路由来到达目的地。这种自愈路由机制允许路由器快速检测其他路由器何时离开 Thread 网络，并计算出最佳路径以维护与 Thread 网络中所有其他设备的连通。
+
+每个方向上的链路质量基于来自相邻设备的传入消息的链路成本。此传入链路成本映射到一个从 0 到 3 的链路质量。值 0 表示未知成本。链路成本是对接收级别以上的接收消息的 RSSI（Received Signal Strength Indicator）的度量。
+
+Table 1 概述了链路质量和链路成本。
+
+![Table 1. Link Quality and Link Cost](./pic/t1.jpg)
+
+Figure 4 展示了 Thread 网络上各种链接成本的示例。
+
+![Figure 4. Examples of Various Link Costs on a Thread Network](./pic/f4.jpg)
+
+Thread 网络中任何其他节点的路径成本是到达该节点的链路成本的最小总和。即使在网络的无线电链路质量或拓扑发生变化时，路由器也会监控这些成本，并使用定期的 MLE 广告消息通过 Thread 网络传播新成本。路由成本基于两个设备间的双向链路质量。
+
+为了通过一个简单的示例进行说明，可想象出一个具有共享安全材料的 pre-commissioned 网络，其中所有设备同时启动。每个路由器将定期向单跳邻居发送一个广告，其最初仅用成本作为填充。在内部，每个路由器将存储未在广告中发送的下一跳信息。
+
+前几个广告的路径成本等于链路成本，因为已知的唯一路由器是直接邻居，如 Figure 5 所示。
+
+![Figure 5. Forming a Thread Network after Power Cycle](./pic/f5.jpg)
+
+但随后，路由器将开始听到来自邻居的广告，这些广告包含两跳或更多的其他路由器的成本，它们的表使用了多跳路径成本作为填充，然后传播到更远，最终直到网络中所有路由器之间都存在连通信息，如 Figure 6 和 Figure 7 所示。
+
+![Figure 6. Thread Network Formation: Route Advertisements](./pic/f6.jpg)
+
+![Figure 7. Thread Network Formation: Multi-hop](./pic/f7.jpg)
+
+当路由器从邻居收到一个新的 MLE 广告时，它将已具有该设备的邻居表条目或者将添加一个。MLE 广告包含来自邻居的传入成本，以在路由器的邻居表中更新。MLE 广告还包含其他路由器的更新路由信息，并且该信息将在设备路由表中更新。
+
+通过查看子系地址的高位来确定父路由器地址，从而完成到子设备的路由。一旦设备知道父路由器，它就具有该设备的路径成本信息和下一跳路由信息。
+
+活跃路由器的数量受限于单个 802.15.4 包中可包含的路由和成本信息的数量。目前该限制为 32 个路由器，但提供了 64 个活跃路由器地址，以允许路由器地址老化。
+
+**路由**
+
+设备使用 IP 来路由转发包。设备路由表使用路由器的 mesh 本地 ULA 地址的压缩形式和合适的下一跳进行填充。
+
+距离矢量路由（Distance vector routing）用于获取到 Thread 网络上的路由器地址的路由。在 Thread 网络上进行路由时，该 16-bit 地址的高 6 位定义了目标路由器的路由器地址。如果目标地址的低位为 0，则最终目的地为路由器。否则，目标路由器将负责根据 16-bit 目标地址的低位来转发到最终目标。
+
+对于超出 Thread 网络的路由，边界路由器将通知服务特定前缀的 Leader，并且该信息在 MLE 包内作为 Thread 网络数据被分发。该 Thread 网络数据包括：前缀数据（即前缀本身）、6LoWPAN 上下文，边界路由器和该前缀的 DHCPv6 服务器。如果设备要使用该前缀配置 IPv6 地址，则它将使用 SLAAC（Stateless Address Autoconfiguration）或联系相应的 DHCP（Dynamic Host Configuration Protocol）服务器。Thread 网络数据还包括一个路由服务器列表，其是默认边界路由器的路由器地址。
+
+Leader 被指定，以决定选择 REED 成为路由器或允许路由器降级成为 REED。Leader 还分配和管理路由器地址。然而，此路由 Leader 中包含的所有信息都存在于其他路由器中，如果该路由 Leader 无法到达，则另一个路由器将自动选举并在没有用户干预的情况下接管成为 Leader。
+
+**重试和确认**
+
+虽然在 Thread 栈中使用 UDP 传送，但仍然需要可靠的消息传递。这是使用一系列轻量级机制完成的，如下所示：
+
+* MAC 级重试：每个设备使用来自下一跳的 MAC 确认，并且如果未收到 MAC ACK 消息，则将在 MAC 层重试消息。
+* 应用级重试：该应用级可以确定（如果消息可靠性是一个关键参数），并且可以在必要时实现其自己的重试机制。
 
