@@ -32,6 +32,7 @@ Copyright © 2015 Thread Group, Inc. All rights reserved.
 - [IP 栈基本原理](#ip-栈基本原理)
 - [网络拓扑](#网络拓扑)
 - [路由和网络连通](#路由和网络连通)
+- [加入一个 Thread 网络](#加入一个-thread-网络)
 
 # 引言
 
@@ -208,4 +209,62 @@ Leader 被指定，以决定选择 REED 成为路由器或允许路由器降级�
 
 * MAC 级重试：每个设备使用来自下一跳的 MAC 确认，并且如果未收到 MAC ACK 消息，则将在 MAC 层重试消息。
 * 应用级重试：该应用级可以确定（如果消息可靠性是一个关键参数），并且可以在必要时实现其自己的重试机制。
+
+# 加入一个 Thread 网络
+
+加入设备在参与 Thread 网络之前必须经历各个阶段：
+
+* 发现（Discovery）
+* Commissioning
+* 附着（Attaching）
+
+所有的加入都是用户在 Thread 网络中发起的。一旦加入，设备将完全参与 Thread 网络，并可与 Thread 网络内外的其他设备和服务交换应用层信息。
+
+**发现**
+
+加入设备必须发现 Thread 网络并与路由器建立联系以进行 commissioning。加入设备扫描所有信道，在每个信道上发出一个信标请求，并等待信标响应。信标（beacon）包含一个有效载荷，该有效载荷包括网络 SSID（Service Set Identifier）和一个许可加入信标（如果 Thread 网络接受该新成员）。一旦设备发现了 Thread 网络，它将使用 MLE 消息确立一个相邻的路由器，通过该路由器可以执行 commissioning。
+
+如果设备已经获得 commissioning 信息，则不需要发现，因为它已经有足够的信息来直接附着到 Thread 网络。
+
+**Commissioning**
+
+Thread 提供两种 commissioning 方法：
+
+* 使用带外（out-of-band）方法将 commissioning 信息直接配置到设备上。commissioning 信息允许加入设备在其被引入网络后立即加入到适当的 Thread 网络。
+* 在加入设备和智能手机，平板电脑或 web 上的 commissioning 应用程序之间建立 commissioning 会话。Commissioning 会话安全地将 commissioning 信息传递给加入设备，以允许其在完成 commissioning 会话后附着到适当的 Thread 网络。
+
+Note：典型的仅通过信标有效载荷中的许可加入标志进行加入的 802.15.4 方法不被用于 Thread 网络。此方法最常用于没有用户界面或带外通道的设备的按钮类型加入。在存在多个可用网络的情况下，此方法可能存在设备转向问题，并且可能存在安全问题。
+
+**附着**
+
+带有 commissioning 信息的加入设备与父路由器联系，然后通过交换 MLE 链路配置消息来通过父路由器附着到 Thread 网络。设备将作为终端设备或 REED 附着到 Thread 网络，并由父路由器分配一个 16-bit 短地址，如 Figure 8 所示。
+
+![Figure 8. Attaching to a Thread Network with a Known Key](./pic/f8.jpg)
+
+一旦 REED 已附着，它可能会发出一个地址请求以成为路由器，然后由 Leader 分配一个路由器地址。
+
+**MLE 消息**
+
+一旦设备附着到 Thread 网络，它就需要各种信息来维护其在网络中的参与。MLE 提供在整个网络中分发网络数据的服务，并在邻居间交换链路成本和安全帧计数器。
+
+MLE 消息分发或交换以下信息：
+
+* 相邻设备的 16-bit 短地址和 64-bit EUI 64 长地址
+* 设备能力信息，包括其是否为嗜睡终端设备以及嗜睡主机设备的睡眠周期
+* 邻居链路成本（如果是路由器）
+* 设备间的安全材料和帧计数器
+* 到 Thread 网络中所有其他路由器的路由成本
+* 更新网络数据，例如 MAC 中使用的信道，PAN ID 和信标有效载荷参数
+
+Note：MLE 消息被加密，除了在加入设备获得所需安全材料前的发现期间。
+
+**DHCPv6**
+
+DHCPv6 [\[RFC 3315\]]() 是一种基于 UDP 的 client-server 协议，用于管理网络中设备的配置。DHCPv6 使用 UDP 从 DHCP 服务器中请求数据。
+
+边界路由器上的 DHCPv6 服务用于配置：
+
+* 网络地址（Network addresses）
+* 设备要求的多播地址（Multicast addresses required by devices）
+* 主机名服务（Hostname services）
 
