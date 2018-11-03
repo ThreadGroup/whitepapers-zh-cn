@@ -33,6 +33,8 @@ Copyright © 2015 Thread Group, Inc. All rights reserved.
 - [网络拓扑](#网络拓扑)
 - [路由和网络连通](#路由和网络连通)
 - [加入一个 Thread 网络](#加入一个-thread-网络)
+- [管理](#管理)
+- [持久数据](#持久数据)
 
 # 引言
 
@@ -121,7 +123,7 @@ Figure 2 展示了 Thread 的短地址。
 
 **ICMP**
 
-设备支持 ICMPv6（Internet Control Message Protocol version 6）协议 [\[RFC 4443\]](https://www.ietf.org/rfc/rfc4443) 和 ICMPv6 错误消息，以及 echo 请求和 echo 答复消息。
+设备支持 ICMPv6（Internet Control Message Protocol version 6）协议 [\[RFC 4443\]](https://www.ietf.org/rfc/rfc4443) 和 ICMPv6 错误消息，以及 echo 请求和 echo 应答消息。
 
 **UDP**
 
@@ -260,11 +262,47 @@ Note：MLE 消息被加密，除了在加入设备获得所需安全材料前的
 
 **DHCPv6**
 
-DHCPv6 [\[RFC 3315\]]() 是一种基于 UDP 的 client-server 协议，用于管理网络中设备的配置。DHCPv6 使用 UDP 从 DHCP 服务器中请求数据。
+DHCPv6 [\[RFC 3315\]](https://www.ietf.org/rfc/rfc3315) 是一种基于 UDP 的 client-server 协议，用于管理网络中设备的配置。DHCPv6 使用 UDP 从 DHCP 服务器中请求数据。
 
 边界路由器上的 DHCPv6 服务用于配置：
 
 * 网络地址（Network addresses）
 * 设备要求的多播地址（Multicast addresses required by devices）
 * 主机名服务（Hostname services）
+
+# 管理
+
+**ICMP**
+
+所有设备都支持 ICMPv6 错误消息，以及 echo 请求和 echo 应答消息。
+
+**设备管理**
+
+设备上的应用层可以访问一组设备管理和诊断信息，这些信息可以在本地使用，或收集并发送到其他管理设备。
+
+Thread 从 802.15.4 MAC 层使用的信息包括：
+
+* EUI 64 地址
+* 16-bit 短地址
+* 能力信息（Capability information）
+* PAN ID
+* 发送和接收的包（Packets sent and received）
+* 发送或接收时丢弃的包（Packets dropped on transmit or receive）
+* 安全错误（Security errors）
+* MAC 重试次数（Number of MAC retries）
+
+Thread 从网络层使用的信息包括：
+
+* IPv6 地址丢失（IPv6 address lost）
+* 邻居表（Neighbor table）
+* 子系表（Child table）
+* 路由表（Routing table）
+
+# 持久数据
+
+在现场操作的设备可能由于各种原因而被意外或故意重置。已被重置的设备需要重启网络操作（无需用户干预）。为此，需要将一组信息存储在非易失性存储器中。这包括：
+
+* 网络信息（如 PAN ID）
+* 安全材料（使用的每个密钥）
+* 来自网络的寻址信息以形成设备 IPv6 地址
 
