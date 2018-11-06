@@ -1,6 +1,6 @@
 # Thread Group 白皮书的中文译本
 
-完成情况：
+索引：
 
--[x] [Thread 栈基础知识](./Thread%20Stack%20Fundamentals/Thread%20Stack%20Fundamentals.md) -- Thread Stack Fundamentals
+* [Thread 协议基础](./Thread%20Stack%20Fundamentals/Thread%20Stack%20Fundamentals.md) -- Thread Stack Fundamentals
 
