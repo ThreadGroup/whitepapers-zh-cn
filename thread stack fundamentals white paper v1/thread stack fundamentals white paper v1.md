@@ -240,7 +240,7 @@ Leader 需要决定 REED 的升级或 Router 的降级。Leader 还负责分配�
 
 * Discovery（发现）
 * Commissioning
-* Attaching（附着）
+* Attaching（加入）
 
 在 Thread 网络中，所有的加入操作都是用户发起的。一旦成功加入，设备将完全参与 Thread 网络，并可与 Thread 网络内外的其他设备和服务交换应用层信息。
 
